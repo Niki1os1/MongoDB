@@ -1,0 +1,580 @@
+-- Database: lab3
+
+-- DROP DATABASE lab3;
+
+
+DROP TABLE IF EXISTS basket CASCADE;
+	DROP TABLE IF EXISTS customers CASCADE;
+	DROP TABLE IF EXISTS products CASCADE;
+	DROP TABLE IF EXISTS categories CASCADE;
+	DROP TABLE IF EXISTS payments_orders CASCADE;
+	DROP TABLE IF EXISTS payments CASCADE;
+	DROP TABLE IF EXISTS delivery_orders CASCADE;
+	DROP TABLE IF EXISTS delivery CASCADE;
+	DROP TABLE IF EXISTS orders CASCADE;
+	DROP TABLE IF EXISTS accounts CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+		
+		
+		
+		
+		
+		
+		
+		
+	
+		
+		
+		
+		
+CREATE TABLE users
+(
+    id             bigint                 	PRIMARY KEY,
+    login          varchar(255),
+    password       varchar(255)
+);
+
+CREATE TABLE accounts
+(
+	id 				bigint					PRIMARY KEY,
+	user_id  		bigint					NOT NULL,
+	value			money,
+	is_vip			boolean
+);
+
+CREATE TABLE orders
+(
+	id 				bigint					PRIMARY KEY,
+	user_id  		bigint					NOT NULL,
+	status 			varchar(1),
+	price 			money,
+	discount		money,
+	create_at		timestamp
+);
+
+CREATE TABLE delivery
+(
+	id 				bigint					PRIMARY KEY,
+	name			varchar(255),
+	description 	text,
+	price 			money
+);
+
+CREATE TABLE delivery_orders
+(
+	id 				bigint					PRIMARY KEY,
+	order_id  		bigint					NOT NULL,
+	delivery_id  	bigint					NOT NULL,
+	delivery_date	date
+);
+
+CREATE TABLE payments
+(
+	id 				bigint					PRIMARY KEY,
+	name 			varchar(255),
+	description 	text
+);
+
+CREATE TABLE payments_orders
+(
+	id				bigint					PRIMARY KEY,
+	order_id		bigint					NOT NULL,
+	value 			money,
+	payment_id		bigint,
+	from_account	boolean,
+	create_at		timestamp
+);
+
+CREATE TABLE categories
+(
+	id 				bigint					PRIMARY KEY,
+	name			varchar(255)
+);
+
+CREATE TABLE products
+(
+	id 				bigint					PRIMARY KEY,
+	name 			varchar(255),
+	price			money,
+	quantity		int,
+	discount		money,
+	category_id		bigint					NOT NULL
+);
+
+CREATE TABLE customers
+(
+	id				bigint					PRIMARY KEY,
+	user_id			bigint,
+	create_at		timestamp
+);
+
+CREATE TABLE basket
+(
+	id				bigint					PRIMARY KEY,
+	order_id		bigint,
+	customer_id		bigint					NOT NULL,
+	product_id		bigint					NOT NULL,
+	price			money,
+	discount		money,
+	quantity		int,
+	create_at		timestamp
+);
+
+
+
+
+
+
+--1
+ALTER TABLE accounts
+ADD CONSTRAINT FK_accounts_user_id_users_id
+FOREIGN KEY (user_id) REFERENCES users(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--2
+ALTER TABLE orders
+ADD CONSTRAINT FK_orders_user_id_users_id
+FOREIGN KEY (user_id) REFERENCES users(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--3
+ALTER TABLE delivery_orders
+ADD CONSTRAINT FK_delivery_orders_order_id_orders_id
+FOREIGN KEY (order_id) REFERENCES orders(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--4
+ALTER TABLE delivery_orders
+ADD CONSTRAINT FK_delivery_orders_delivery_id_delivery_id
+FOREIGN KEY (delivery_id) REFERENCES delivery(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--5
+ALTER TABLE payments_orders
+ADD CONSTRAINT FK_payments_orders_order_id_orders_id
+FOREIGN KEY (order_id) REFERENCES orders(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--6
+ALTER TABLE products
+ADD CONSTRAINT FK_products_category_id_categories_id
+FOREIGN KEY (category_id) REFERENCES categories(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--7
+ALTER TABLE basket
+ADD CONSTRAINT FK_basket_customer_id_customers_id
+FOREIGN KEY (customer_id) REFERENCES customers(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+--8
+ALTER TABLE basket
+ADD CONSTRAINT FK_basket_product_id_products_id
+FOREIGN KEY (product_id) REFERENCES products(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+
+
+
+INSERT INTO users (id, login, password)
+VALUES
+	(1, 'admin', 'admin'),
+	(2, 'viton', 'complicatedPass'),
+	(3, 'Cheburashka', '04begemot'),
+	(4, 'silverworm', 'QIm44xkYrg'),
+	(5, 'YAGRUZIN', 'georgia_top');
+	
+INSERT INTO accounts (id, user_id, value, is_vip)
+VALUES
+	(1, 1, 100, TRUE),
+	(2, 2, 94.3, TRUE),
+	(3, 3, 20.1, FALSE),
+	(4, 4, 53.7, TRUE),
+	(5, 5, 1000, FALSE);
+	
+INSERT INTO categories (id,name)
+VALUES
+	(1, 'category 1'),
+	(2, 'category 2'),
+	(3, 'category 3'),
+	(4, 'category 4'),
+	(5, 'category 5'),
+	(6, 'category empty');
+	
+INSERT INTO products (id,name,price,quantity,discount,category_id)
+VALUES
+	(1,'prodname 1', 92.78, 2, 8.14, 4),
+	(2,'prodname 2', 14.65, 1, 4.56, 1),
+	(3,'prodname 3', 40.72, 2, 9.25, 2),
+	(4,'prodname 4', 58.64, 10, 4.86, 1),
+	(5,'prodname 5', 89.71, 9, 9.44, 2),
+	(6,'prodname 6', 83.64, 7, 9.14, 1),
+	(7,'prodname 7', 42.77, 5, 0.93, 4),
+	(8,'prodname 8', 72.93, 5, 6.55, 3),
+	(9,'prodname 9', 91.46, 4, 2.04, 2);
+	
+INSERT INTO customers (id, user_id, create_at)
+VALUES
+	(1, NULL, TIMESTAMP '2021-10-19 10:23:54'),
+	(2, NULL, TIMESTAMP '2021-10-20 09:05:51'),
+	(3, 1, TIMESTAMP '2021-11-02 15:11:23'),
+	(4, 2, TIMESTAMP '2021-11-02 18:59:59'),
+	(5, 4, TIMESTAMP '2021-11-03 17:41:29'),
+	(6, 5, TIMESTAMP '2021-11-03 21:01:45'),
+	(7, 3, TIMESTAMP '2021-04-21 19:23:54');
+	
+INSERT INTO orders (id, user_id, status, price, discount, create_at)
+VALUES
+	(1, 4, 'N', 150.00, 26.00, TIMESTAMP '2021-11-02 20:02:53'),
+	(2, 5, 'D', 125.17, 2.14, TIMESTAMP '2021-11-03 22:42:29'),
+	(3, 5, 'D', 200.00, 2.14, TIMESTAMP '2021-11-03 21:42:29'),
+	(4, 5, 'P', 71.93, 0.00, TIMESTAMP '2021-11-03 22:44:45'),
+	(5, 3, 'F', 178.00, 0.42, TIMESTAMP '2021-04-22 09:03:36'),
+	(6, 1, 'C', 149, 1.00, TIMESTAMP '2021-11-03 15:20:25');
+	
+INSERT INTO basket (id, order_id, customer_id, product_id, price, discount, quantity, create_at)
+VALUES
+	(1, NULL, 1, 1, 92.78, 8.14, 10, TIMESTAMP '2021-08-19 11:23:54'),
+	(2, NULL, 1, 4, 234.56, 19.44, 4, TIMESTAMP '2021-08-20 10:05:51'),
+	(3, 1, 5, 3, 40.72, 9.25, 1, TIMESTAMP '2021-11-02 16:11:23'),
+	(4, 1, 5, 4, 117.28, 9.72, 2, TIMESTAMP '2021-11-02 19:59:59'),
+	(5, 2, 6, 7, 128.31, 2.79, 3, TIMESTAMP '2021-11-03 22:41:29'),
+	(6, 3, 6, 8, 72.93, 6.55, 1,TIMESTAMP '2021-11-03 22:43:45'),
+	(7, 4, 7, 5, 179.42, 18.88, 2, TIMESTAMP '2021-04-22 09:01:36'),
+	(8, 5, 3, 1, 92.78, 8.14, 1, TIMESTAMP '2021-11-03 15:11:23'),
+	(9, 5, 3, 2, 14.65, 4.56, 1, TIMESTAMP '2021-11-03 15:15:47'),
+	(10, 5, 3, 3, 40.72, 9.25, 1, TIMESTAMP '2021-11-03 15:17:25'),
+	(11, NULL, 3, 2, 43.95, 13.68, 3, TIMESTAMP '2021-08-19 12:23:54');
+
+INSERT INTO payments (id, name, description)
+VALUES
+	(1, 'name1', 'description1'),
+	(2, 'name2', 'description2');
+
+INSERT INTO payments_orders (id, order_id, value, payment_id, from_account, create_at)
+VALUES 
+	(1, 1, 10, 1, FALSE, '2021-11-02 20:03:53'),
+	(2, 2, 125.17, 1, TRUE, '2021-11-03 22:45:29'),
+	(3, 3, 71.93, 2, TRUE, '2021-11-03 22:42:45'),
+	(4, 4, 78.00, NULL, TRUE, '2021-04-22 10:03:36'),
+	(5, 4, 100.00, NULL, TRUE, '2021-04-22 10:04:36'),
+	(6, 5, 10, NULL, TRUE, '2021-11-03 15:22:25');
+	
+INSERT INTO delivery (id, name, description, price)
+VALUES
+	(1, 'name1', 'description1', 1),
+	(2, 'name2', 'description5', 2);	
+
+INSERT INTO delivery_orders (id, order_id, delivery_id, delivery_date)
+VALUES
+	(1, 1, 1, '2021-11-03'),
+	(2, 2, 2, '2021-11-04'),
+	(3, 3, 2, '2021-11-04'),
+	(4, 4, 1, '2021-04-22'),
+	(5, 5, 1, '2021-11-04');
+
+--1 +++++++
+-- SELECT c.name, count(p.quantity)
+-- FROM products p
+-- LEFT JOIN categories c on c.id=p.category_id
+-- GROUP BY c.name;
+
+--2   +++++
+-- SELECT u.login, o.price, sum(po.value)
+-- FROM users u
+-- JOIN orders o ON o.user_id = u.id
+-- JOIN payments_orders po ON po.order_id = o.id
+-- GROUP BY u.login, o.price
+-- HAVING sum(po.value) < o.price;
+
+--3    ++++
+-- DELETE FROM products p WHERE p.id NOT IN
+-- (SELECT b.product_id
+--  FROM basket b
+-- WHERE b.product_id=p.id);
+
+--4   +++++
+-- SELECT o.id, o.price, sum(po.value)
+-- FROM users u
+-- JOIN orders o ON o.user_id = u.id
+-- JOIN payments_orders po ON po.order_id = o.id
+-- WHERE o.price::numeric != 0
+-- GROUP BY o.id, o.price
+-- HAVING (sum(po.value) < o.price);
+
+--5  ????????
+-- SELECT u.login, o.status, count(o.status)
+-- FROM users u
+-- JOIN orders o ON o.user_id = u.id
+-- GROUP BY u.login, o.status;
+
+--6 ++++++++++
+-- SELECT o.status,  AVG(o.price::numeric)
+-- FROM orders o
+-- WHERE o.status = 'F'
+-- GROUP BY o.status;
+
+--7 +++++
+-- SELECT p.name, SUM(b.price) AS profit
+-- FROM products p
+-- JOIN basket b ON b.product_id = p.id
+-- JOIN orders o ON b.order_id = o.id
+-- JOIN payments_orders po ON po.order_id = o.id
+-- GROUP BY p.name, o.id
+-- HAVING o.price <= SUM(po.value)
+-- ORDER BY profit DESC
+-- FETCH FIRST 10 ROWS ONLY;
+
+
+--8 +++++
+-- SELECT p.*
+-- FROM products p
+-- JOIN basket b ON b.product_id = p.id
+-- WHERE  b.order_id IS NULL
+-- GROUP BY p.id
+-- HAVING p.quantity < SUM(b.quantity);
+
+--9   +++++++
+-- SELECT u.login, b.create_at
+-- FROM basket b
+-- JOIN customers c ON b.customer_id = c.id
+-- LEFT JOIN users u ON c.user_id = u.id
+-- WHERE b.order_id IS NULL
+-- GROUP BY u.login, b.create_at
+-- HAVING b.create_at <= current_date - 30;
+
+--10 ?????
+-- UPDATE products
+-- SET discount = p.discount::numeric + products.price::numeric * 0.10  
+-- FROM products p, basket b
+-- WHERE b.product_id IN
+-- (
+-- 	SELECT b.product_id
+-- 	FROM basket b
+-- 	RIGHT JOIN orders o ON b.order_id = o.id
+-- 	WHERE b.product_id = p.id 
+-- 	AND o.status LIKE '[PF]'
+-- 	GROUP BY b.product_id
+-- 	HAVING COUNT(o.*) <= 10
+-- 	);
+
+--11  ++++???
+-- SELECT COUNT(o.*)
+-- FROM orders o
+-- WHERE o.price <= (
+-- SELECT SUM(po.value)
+-- 	FROM payments_orders po
+-- 	WHERE po.order_id = o.id
+-- 	AND po.from_account = TRUE
+-- );
+
+--12
+-- UPDATE orders SET discount = 0.5* o.price, price = 0.5* o.price
+-- FROM orders o
+-- LEFT JOIN users u ON o.user_id = u.id
+-- LEFT JOIN accounts a ON a.user_id = u.id
+-- WHERE o.status = 'N' AND a.is_vip = TRUE;
+
+--13  ++++????
+-- SELECT delivery_top.*, payment_top.*
+-- FROM 
+-- (
+-- 	SELECT d.name AS delivery_top
+-- 	FROM delivery d
+-- 	LEFT JOIN delivery_orders d_o ON d_o.delivery_id = d.id
+-- 	GROUP BY d.name
+-- 	ORDER BY count(d_o.*) DESC LIMIT 1
+-- ) AS delivery_top,
+-- (
+-- 	SELECT p.name AS payment_top
+-- 	FROM payments p
+-- 	LEFT JOIN payments_orders po ON po.payment_id = p.id
+-- 	GROUP BY p.name
+-- 	ORDER BY count(po.*) DESC LIMIT 1
+-- ) AS payment_top;
+
+--14
+-- DELETE FROM categories USING categories AS c
+-- LEFT JOIN products p ON p.category_id = c.id
+-- WHERE p.id IS NULL;
+
+--15 ++++???
+-- SELECT o.id, min(b.create_at) AS first_product, po.create_at, sum(po.value) AS paid_value
+-- FROM basket b
+-- LEFT JOIN products p ON b.product_id = p.id
+-- JOIN orders o ON b.order_id = o.id
+-- LEFT JOIN payments_orders po ON po.order_id = o.id
+-- GROUP BY o.id, po.create_at
+-- HAVING o.price <= sum(po.value)
+-- AND date_part('hour', po.create_at::timestamp - min(b.create_at)::timestamp) <= 1;
+
+--16
+-- UPDATE accounts SET value = a.value + account_orders.price
+-- FROM accounts a,
+--   (
+--     SELECT
+--       sum(o.price) AS price,
+--       sum(po.value) AS paid_value
+--     FROM orders o
+--     LEFT JOIN payments_orders po ON po.order_id = o.id
+--    GROUP BY o.status, o.price
+-- 	  HAVING o.status = 'C'
+	 
+-- 	  AND o.price <= sum(po.value)
+ 
+--   ) AS account_orders;
+
+
+
+
+
+--lab 4 
+--1
+-- DROP VIEW VEIW_AVG_PRICE;
+
+-- CREATE VIEW VIEW_AVG_PRICE (login, avg_price) AS
+-- SELECT
+--   u.login AS login,
+--   AVG(o.price::numeric) AS avg_price
+-- FROM
+-- users u
+-- RIGHT JOIN orders o ON o.user_id = u.id
+-- GROUP BY
+--   u.id;
+
+-- SELECT * FROM VIEW_AVG_PRICE;
+
+--2
+-- CREATE OR REPLACE FUNCTION withdraw(text, money) returns money as $$ declare account_value money;
+-- BEGIN
+-- SELECT a.value INTO account_value
+-- FROM users u
+--   LEFT JOIN accounts a ON a.user_id = u.id
+-- WHERE u.login = $1;
+-- IF account_value < $2 THEN
+-- 	RAISE EXCEPTION 'Недостаточно средств на счёте для списания %.', $2;
+-- ELSE
+-- UPDATE accounts SET value = account_value - $2
+-- FROM accounts a
+--   LEFT JOIN users u ON a.user_id = u.id
+-- WHERE u.login = $1;
+
+-- RETURN account_value - $2;
+-- END IF;
+-- end;
+-- $$ language plpgsql;
+
+--   SELECT withdraw('viton'::text, 1::money);
+ 
+ 
+--3
+DROP PROCEDURE calculate;
+
+CREATE PROCEDURE calculate (order_id bigint, customer_id BIGINT, INOUT price MONEY, INOUT discount MONEY)AS $$
+DECLARE
+total_delivery_price MONEY := 0;
+
+BEGIN
+ SELECT sum(b.price), sum(b.discount) 
+    INTO price, discount
+    FROM basket b
+    WHERE b.order_id = calculate.order_id AND
+          b.customer_id =  calculate.customer_id;
+total_delivery_price := (  SELECT sum(d.price)
+                        FROM delivery_orders dor
+                        LEFT JOIN delivery d on d.id = dor.delivery_id
+                        WHERE dor.order_id = calculate.order_id
+                    );
+    IF total_delivery_price IS NOT NULL THEN
+        price := price + total_delivery_price;
+    END IF;
+END;
+$$ language plpgsql;
+
+-- CALL update_order_price(1, 1::money, 1::money);
+
+
+--4
+CREATE OR REPLACE FUNCTION change_basket() RETURNS trigger AS $change_basket$
+<<main>>
+DECLARE
+    price money := 0;
+    discount money := 0;
+    order_id BIGINT;
+    customer_id BIGINT;
+BEGIN
+    IF NEW.customer_id IS NOT NULL THEN
+        order_id := NEW.order_id;
+        customer_id :=  NEW.customer_id;
+    ELSE
+           order_id := OLD.order_id;
+        customer_id :=  OLD.customer_id;
+    END IF;
+    call calculate(main.order_id, main.customer_id, main.price, main.discount);
+    UPDATE orders SET price = main.price, discount = main.discount WHERE id = main.order_id; 
+    RETURN NEW;
+END;
+$change_basket$ LANGUAGE plpgsql;
+
+DROP TRIGGER change_basket ON basket;
+CREATE TRIGGER change_basket
+        AFTER INSERT OR UPDATE OR DELETE ON basket
+        FOR EACH ROW
+            EXECUTE FUNCTION change_basket();
+			
+-----			
+
+SELECT * FROM orders where id = 1;
+UPDATE basket SET price = 360 WHERE id = 3;
+SELECT * FROM orders where id = 1;  
+
+
+--5
+DROP FUNCTION update_orders;
+DROP TRIGGER trigger_order_update ON payments_orders;
+
+CREATE FUNCTION update_orders() RETURNS trigger AS $$ DECLARE is_paid boolean;
+BEGIN
+SELECT (o.price<=sum(po.value)) INTO is_paid
+FROM orders o
+  RIGHT JOIN payments_orders po ON po.order_id = o.id
+WHERE
+  o.id = NEW.id
+GROUP BY
+  o.id;
+
+IF is_paid THEN
+  UPDATE orders SET status = 'P'
+  FROM orders o
+  WHERE o.id = NEW.order_id;
+  UPDATE products SET quantity = products.quantity - p.quantity
+  FROM products p WHERE EXISTS
+    (SELECT b.*
+      FROM basket b
+      WHERE b.order_id = NEW.id
+        AND b.product_id = p.id
+    );
+END IF;
+
+RETURN NEW;
+END;
+$$ language plpgsql;
+
+CREATE TRIGGER trigger_order_update
+AFTER INSERT OR UPDATE ON  payments_orders
+FOR EACH ROW
+  EXECUTE PROCEDURE update_orders();
+------------------------------------------  
+SELECT * FROM orders where id = 1;
+UPDATE payments_orders SET value = 596 WHERE id = 1;
+SELECT * FROM orders where id = 1;  
+  
+SELECT * FROM payments_orders where id = 1;  
+--6
+
+SELECT u.login, o.price,
+  sum(o.price) OVER (ORDER BY o.create_at DESC)
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.id
+ORDER BY o.create_at DESC; 

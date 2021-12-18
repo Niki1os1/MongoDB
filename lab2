@@ -1,0 +1,300 @@
+--CREATE DATABASE lab2; 
+--DROP DATABASE lab2;
+-- 	DROP TABLE IF EXISTS reviews CASCADE;
+-- 		DROP TABLE IF EXISTS user_coupons CASCADE;
+-- 	DROP TABLE IF EXISTS coupons CASCADE;
+-- 		DROP TABLE IF EXISTS company CASCADE;
+-- DROP TABLE IF EXISTS users CASCADE;
+-- 		DROP TABLE IF EXISTS user_info CASCADE;
+-- 		DROP TABLE IF EXISTS cities CASCADE;
+-- 		DROP TABLE IF EXISTS services CASCADE;
+		
+CREATE TABLE users
+(
+  	id 				SERIAL                		PRIMARY KEY NOT NULL,
+  	login 			CHARACTER VARYING(20) 		UNIQUE NOT NULL,
+  	password 		CHARACTER VARYING(30) 		NOT NULL,
+  	role smallint
+); 
+
+CREATE TABLE user_info 
+(  	id 				SERIAL                		PRIMARY KEY NOT NULL,
+   	user_id 		int,
+   	avatar 			text,
+   	email 			CHARACTER VARYING(254) 		UNIQUE NOT NULL,
+   	phone 			CHARACTER VARYING(12) 		UNIQUE NOT NULL
+);
+
+CREATE TABLE services 
+(
+	id 				SERIAL                		PRIMARY KEY NOT NULL,
+	name 			CHARACTER VARYING(100)
+);
+
+CREATE TABLE cities
+(
+	id 				SERIAL                		PRIMARY KEY NOT NULL,
+	name 			CHARACTER VARYING(100) 		NOT NULL
+);
+
+------------------------------------------------------------------------------
+
+CREATE TABLE company
+(
+	id 				SERIAL                		NOT NULL,
+	name 			CHARACTER VARYING(100) 		UNIQUE NOT NULL,
+	phone 			CHARACTER VARYING(12) 		UNIQUE NOT NULL,
+	address 		CHARACTER VARYING(100) 		UNIQUE NOT NULL,
+	manager_id 		int,
+	description 	CHARACTER VARYING(64) 		UNIQUE NOT NULL,
+	city_id 		int							NOT NULL,
+	PRIMARY KEY(id)
+);
+
+CREATE TABLE coupons
+(
+	 id 			SERIAL                		PRIMARY KEY NOT NULL,
+	 discount 		integer 					NOT NULL,
+	 name 			CHARACTER VARYING(100)	 	NOT NULL,
+	 company_id 	int,
+	 amoun 			integer 					NOT NULL,
+	 start_date 	Date 						UNIQUE NOT NULL,
+	 end_date 		Date 						UNIQUE NOT NULL,
+	 service_id 	int,
+	 description 	CHARACTER VARYING(64) 		UNIQUE NOT NULL
+);
+
+
+CREATE TABLE coupons_y2021m11( CHECK (start_date >= TIMESTAMP'2021-11-01 00:00:00'
+	AND end_date <= TIMESTAMP'2021-12-01 00:00:00')) 
+	INHERITS (coupons);
+	
+CREATE TABLE coupons_y2021m12( CHECK (start_date >= TIMESTAMP'2021-12-01 00:00:00'
+	AND end_date <= TIMESTAMP'2022-01-01 00:00:00')) 
+	INHERITS (coupons);
+	
+CREATE TABLE coupons_y2022m01( CHECK (start_date >= TIMESTAMP'2022-01-01 00:00:00'
+	AND end_date <=TIMESTAMP'2022-02-01 00:00:00')) 
+	INHERITS (coupons);
+	
+CREATE TABLE coupons_y2022m02( CHECK (start_date >= TIMESTAMP'2022-02-01 00:00:00'
+	AND end_date <=TIMESTAMP'2022-03-01 00:00:00')) 
+	INHERITS (coupons);
+	
+CREATE TABLE coupons_y2022m03( CHECK (start_date >= TIMESTAMP'2022-03-01 00:00:00'
+	AND end_date <=TIMESTAMP'2022-04-01 00:00:00')) 
+	INHERITS (coupons);
+------------------------------------------------------------------------------
+
+CREATE INDEX ON coupons_y2021m11 (start_date);
+CREATE INDEX ON coupons_y2021m12 (start_date);
+CREATE INDEX ON coupons_y2022m01 (start_date);
+CREATE INDEX ON coupons_y2022m02 (start_date);
+CREATE INDEX ON coupons_y2022m03 (start_date);
+------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION coupons_insert_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF ( NEW.start_date >= DATE '2021-11-01' AND
+         NEW.start_date < DATE '2021-12-01' ) THEN
+        INSERT INTO coupons_y2021m11 VALUES (NEW.*);
+    
+	ELSIF ( NEW.start_date >= DATE '2021-12-01' AND
+            NEW.start_date < DATE '2022-01-01' ) THEN
+        INSERT INTO coupons_y2021m12 VALUES (NEW.*);
+    
+	ELSIF ( NEW.start_date >= DATE '2022-01-01' AND
+            NEW.start_date < DATE '2022-02-01' ) THEN
+        INSERT INTO coupons_y2022m01 VALUES (NEW.*);
+    
+	ELSIF ( NEW.start_date >= DATE '2022-02-01' AND
+            NEW.start_date < DATE '2022-03-01' ) THEN
+        INSERT INTO coupons_y2022m02 VALUES (NEW.*);
+	
+	ELSIF ( NEW.start_date >= DATE '2022-03-01' AND
+            NEW.start_date < DATE '2022-04-01' ) THEN
+        INSERT INTO coupons_y2022m03 VALUES (NEW.*);
+		   
+    ELSE
+        RAISE EXCEPTION
+  'Date out of range.  Fix the coupons_insert_trigger() function!';
+    END IF;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;
+------------------------------------------------------------------------------
+CREATE TRIGGER insert_coupons_trigger
+    BEFORE INSERT ON coupons
+    FOR EACH ROW EXECUTE PROCEDURE coupons_insert_trigger();
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+
+
+CREATE TABLE user_coupons
+( 	 id 			SERIAL                		PRIMARY KEY NOT NULL,
+  	 user_id 		int,
+  	 coupon_id 		int,
+  	 is_used 		boolean,
+  	 date_used 		Date
+);
+
+CREATE TABLE reviews
+(
+	id 				SERIAL                		PRIMARY KEY NOT NULL, -- ??
+	company_id 		int,
+	user_id 		int,
+	comment 		text,
+	rate 			integer 					DEFAULT NULL,
+	date_publication Date
+);
+
+
+ALTER TABLE user_info
+  	ADD CONSTRAINT FK_user_info_user_id_users_id
+	FOREIGN KEY (user_id) REFERENCES users(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+	
+ALTER TABLE company
+  	ADD CONSTRAINT FK_company_manager_id_users_id
+	FOREIGN KEY (manager_id) REFERENCES users(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+
+ALTER TABLE company
+  	ADD CONSTRAINT FK_company_city_id_cities_id
+	FOREIGN KEY (city_id) REFERENCES cities(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+
+ALTER TABLE coupons
+  	ADD CONSTRAINT FK_coupons_company_id_company_id
+	FOREIGN KEY (company_id) REFERENCES company(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+
+ALTER TABLE coupons
+  	ADD CONSTRAINT FK_coupons_service_id_services_id
+	FOREIGN KEY (service_id) REFERENCES services(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+	
+ALTER TABLE user_coupons
+  	ADD CONSTRAINT FK_user_coupons_user_id_users_id
+	FOREIGN KEY (user_id) REFERENCES users(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+	
+ALTER TABLE user_coupons
+  	ADD CONSTRAINT FK_user_coupons_coupon_id_coupons_id
+	FOREIGN KEY (coupon_id) REFERENCES coupons(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+	
+ALTER TABLE reviews
+  	ADD CONSTRAINT FK_reviews_company_id_company_id
+	FOREIGN KEY (company_id) REFERENCES company(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;
+	
+ALTER TABLE reviews
+  	ADD CONSTRAINT FK_reviews_user_id_users_id
+	FOREIGN KEY (user_id) REFERENCES users(id)
+	ON DELETE CASCADE 
+	ON UPDATE CASCADE;	
+
+INSERT INTO users
+VALUES
+(1, 'Nik', 'dfgcvbrty123', 0),
+(2, 'Romen', 'djnbgfhjkm', 0),
+(3, 'Ilyas', 'fuckpassword', 0),
+(4, 'Alex', 'thispass', 0),
+(5, 'Venik', 'ohshitimsorry', 0);
+
+INSERT INTO user_info
+VALUES
+(1, 1, 'Z:/Users/Avatar', 'kuku@gmail.com', '375295748129'),
+(2, 2, 'Z:/Users/Avatar', 'bobik@mail.ru',  '375331836294'),
+(3, 3, 'Z:/Users/Avatar', 'koshka@mail.ru', '375258174936'),
+(4, 4, 'Z:/Users/Avatar', 'lisa@gmail.com', '375297481957'),
+(5, 5, 'Z:/Users/Avatar', 'zayac@gmail.com','375336429571');
+
+INSERT INTO services
+VALUES
+(1, 'firstservice'),
+(2, 'secondservice'),
+(3, 'thirdservice'),
+(4, 'fourthservice'),
+(5, 'fifthsrvice');
+
+INSERT INTO cities
+VALUES
+(1, 'Vitsyebsk'),
+(2, 'Minsk'),
+(3, 'Brest'),
+(4, 'Hrodno'),
+(5, 'Homel');
+
+INSERT INTO company
+VALUES
+(1, 'COMPANY1', '375297463928', 'adress1', 1, 'asdf3', 1),
+(2, 'COMPANY2', '375295731975', 'adress2', 2, 'fgh343', 2),
+(3, 'COMPANY3', '375337549275', 'adress3', 3, 'hjhj44', 3),
+(4, 'COMPANY4', '375257492156', 'adress4', 4, 'fghfgh4', 4),
+(5, 'COMPANY5', '375295847194', 'adress5', 5, 'fhfgh23', 5);
+
+INSERT INTO coupons
+VALUES
+(1, 12, 'COUPONS1', 1, 32442, '12-11-2021', '13-11-2021', 1, 'fghfgh32'),
+(2, 30, 'COUPONS2', 2, 12323, '14-11-2021', '21-11-2021', 2, 'hghj3244'),
+(3, 15, 'COUPONS3', 3, 34534, '16-12-2021', '25-12-2021', 3, 'fgfjdcd3'),
+(4, 70, 'COUPONS4', 4, 12345, '15-02-2022', '15-02-2022', 4, 'kfghk432'),
+(5, 50, 'COUPONS5', 5, 56654, '11-01-2022', '27-01-2022', 5, '34bghjff');
+
+-- INSERT INTO user_coupons
+-- VALUES
+-- (1, 1, 1, TRUE, '09-10-2021'),
+-- (2, 2, 2, TRUE, '12-10-2021'),
+-- (3, 3, 3, TRUE, '11-10-2021'),
+-- (4, 4, 4, TRUE, '07-10-2021'),
+-- (5, 5, 5, TRUE, '01-10-2021');
+
+INSERT INTO reviews
+VALUES
+(1, 1, 1, 'IDEALLY', 9, '09-10-2021'),
+(2, 2, 2, 'very bad', 1, '10-10-2021'),
+(3, 3, 3, 'not bad', 7, '15-10-2021'),
+(4, 4, 4, 'primely', 9, '14-10-2021'),
+(5, 5, 5, 'fine', 10, '12-10-2021');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT * FROM coupons_y2021m11;
