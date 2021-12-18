@@ -1,0 +1,186 @@
+// Welcome to MongoDB Runner editor, please keep 'db' instance. 
+// All methods which are compitable with MongoDB NodeJS driver can be used in this editor.
+// (http://mongodb.github.io/node-mongodb-native/3.1/api/Db.html)
+db.users.insertOne(
+{
+login: "Admin",
+password: "123456",
+role: 1,
+user_info: [{ avatar: "C\avatar\admin.jpg",
+              phone: +375297652198,
+              create_at: ISODate("2019-10-20"),
+              sex: "M",
+              email: "kulakprsp21@gmail.com"}],
+
+cities:    [{ name: "Vitebsk"}],
+
+user_coupons: [{is_used: true}]
+})
+
+db.company.insertOne({
+    name: "InsCorUn",
+    adress: "Vitebsk, av.Moskovsky, 54",
+    phone: +375294839573,
+    manager_id: "61ad32969c869a258006024c",
+    description: "I dont now1",
+    reviews: [{ user_id: "61ad32969c869a258006024c",
+                comment: "Great company, great services",
+                rate: 10,
+                date: ISODate("2021-11-29")}],
+    
+    coupons: [{ discount: 20,
+                name: "Pizza smile",
+                amoun: 1000,
+                start_date: ISODate("2021-11-20"),
+                end_date: ISODate("2021-11-30"),
+                services: [{ name: "Cervice1"}],
+                description: "Buy one large pizza - get a small one as a gift plus a discount"}]
+})
+
+//2
+db.users.insertOne(
+{
+login: "Petya",
+password: "MyPass",
+role: 0,
+user_info: [{ avatar: "C\avatar\petya.jpg",
+              phone: +375292359312,
+              create_at: ISODate("2021-11-20"),
+              sex: "M",
+              email: "pochtamech@mail.ru"}],
+
+cities:    [{ name: "Brest"}],
+
+user_coupons: [{is_used: false}]
+})
+
+db.company.insertOne({
+    name: "PorSvor",
+    adress: "Vitebsk, st.Smolenskaya, 12",
+    phone: +375296749275,
+    manager_id: "61ad32aa9c869a258006024e",
+    description: "I dont now2",
+    reviews: [{ user_id: "61ad32aa9c869a258006024e",
+                comment: "Not bad",
+                rate: 8,
+                date: ISODate("2021-10-12")}],
+    
+    coupons: [{ discount: 20,
+                name: "Solarium",
+                amoun: 100,
+                start_date: ISODate("2021-09-20"),
+                end_date: ISODate("2021-10-20"),
+                services: [{ name: "Cervice2"}],
+                description: "Solarium discount 20 percent"}]
+})
+
+//3
+db.users.insertOne(
+{
+login: "Ilyas",
+password: "UNegoNetuParolya",
+role: 0,
+user_info: [{ avatar: "C\avatar\ilya.jpg",
+              phone: +375298573275,
+              create_at: ISODate("2021-11-19"),
+              sex: "W",
+              email: "2kuzmenkov@gmail.com"}],
+
+cities:    [{ name: "Vitebsk"}],
+
+user_coupons: [{is_used: false}]
+})
+
+db.company.insertOne({
+    name: "GGuNas",
+    adress: "Vitebsk, av.Stroiteley, 66",
+    phone: +375297563869,
+    manager_id: "61ad32c19c869a2580060250",
+    description: "I dont now3",
+    reviews: [{ user_id: "61ad32c19c869a2580060250",
+                comment: "I like it",
+                rate: 9,
+                date: ISODate("2021-11-15")}],
+    
+    coupons: [{ discount: 33,
+                name: "Restaurant GGuNas",
+                amoun: 100,
+                start_date: ISODate("2021-10-20"),
+                end_date: ISODate("2021-11-20"),
+                services: [{ name: "Cervice3"}],
+                description: "discount 33 percent"}]
+})
+
+//4
+db.users.insertOne(
+{
+login: "Niki",
+password: "AUNegoEst'",
+role: 0,
+user_info: [{ avatar: "C\avatar\nik.jpg",
+              phone: +375295873214,
+              create_at: ISODate("2021-11-12"),
+              sex: "M",
+              email: "2kulakov@gmail.com"}],
+
+cities:    [{ name: "Vitebsk"}],
+
+user_coupons: [{is_used: true}]
+})
+
+db.company.insertOne({
+    name: "TNGA",
+    adress: "Vitebsk, av.Frunze, 45",
+    phone: +375296749374,
+    manager_id: "61ad32d29c869a2580060252",
+    description: "I dont now4",
+    reviews: [{ user_id: "61ad32d29c869a2580060252",
+                comment: "Very bad!",
+                rate: 1,
+                date: ISODate("2021-11-29")}],
+    
+    coupons: [{ discount: 75,
+                name: "Restaurant TNGA",
+                amoun: 100,
+                start_date: ISODate("2021-11-20"),
+                end_date: ISODate("2021-11-30"),
+                services: [{ name: "Cervice4"}],
+                description: "discount 75 percent"}]
+})
+
+//5
+db.users.insertOne(
+{
+login: "Leha",
+password: "UNegoEcheIVtoroyEst''",
+role: 0,
+user_info: [{ avatar: "C\avatar\alex.jpg",
+              phone: +375291347694,
+              create_at: ISODate("2021-10-21"),
+              sex: "M",
+              email: "2petrovsky@gmail.com"}],
+
+cities:    [{ name: "Vitebsk"}],
+
+user_coupons: [{is_used: true}]
+})
+
+db.company.insertOne({
+    name: "TEVIB",
+    adress: "Vitebsk, st.Pravdi, 14",
+    phone: +375296749375,
+    manager_id: "61ad32e89c869a2580060254",
+    description: "I dont now5",
+    reviews: [{ user_id: "61ad32e89c869a2580060254",
+                comment: "Best service, great craftsmen",
+                rate: 10,
+                date: ISODate("2020-11-24")}],
+    
+    coupons: [{ discount: 50,
+                name: "TattoStudia TEVIB",
+                amoun: 100,
+                start_date: ISODate("2020-11-15"),
+                end_date: ISODate("2020-11-30"),
+                services: [{ name: "Cervice5"}],
+                description: "discount 50 percent"}]
+})

@@ -1,0 +1,414 @@
+//1) Выборка всех данных, фильтрация по конкретному полю, массиву, встроенному объекту.
+db.users.find(
+{ 
+        login: 'Admin' 
+    },
+     {
+        comment: 'Choose user by login'
+         }
+         );
+db.users.aggregate({
+    $match: {
+        login: 'Admin',
+        $comment: 'Choose user by login'
+    }
+});
+//2) Выборка в интервале, выборка из заданного списка значений.
+db.company.find({
+    'reviews': {
+        $elemMatch: {
+            date: {
+                $in: [
+                    ISODate('2021-11-29'),
+                    ISODate('2021-12-30')
+                ]
+            }
+        }
+    },
+    $comment: 'Choose reviews'
+});
+db.company.aggregate({
+    $match: {
+        'reviews': {
+            $elemMatch: {
+                date: {
+                    $gt: ISODate('2021-11-01'),
+                    $lt: ISODate('2021-11-30')
+                }
+            }
+        },
+        $comment: 'Choose reviews'
+    }
+});
+//3) Выборка с использованием регулярных выражений.
+db.users.find({
+    'user_info': { $elemMatch: { email: { $not: { $regex: '^[A-Za-z]([A-Za-z1-9][\.\-\_]?[A-Za-z1-9]?)+@[A-Za-z]+\.[A-Za-z]{3,}$' } } } },
+    $comment: 'Choose users with bad email'
+});
+db.users.aggregate({
+    $match: {
+        'user_info': { $elemMatch: { email: { $not: { $regex: '^[A-Za-z]([A-Za-z1-9][\.\-\_]?[A-Za-z1-9]?)+@[A-Za-z]+\.[A-Za-z]{3,}$' } } } },
+        $comment: 'Choose users with bad email'
+    }
+});
+//4) Выборка данных за конкретный период времени, на сегодняшний день, за последний месяц.
+db.company.find({
+    'reviews': {
+        $elemMatch: {
+            date: {
+                $gt: ISODate('2021-11-25'),
+                $lt: ISODate('2021-12-15')
+            }
+        }
+    },
+    $comment: 'Choose reviews with special create_at'
+});
+db.company.aggregate({
+    $match: {
+        'reviews': {
+            $elemMatch: {
+                date: {
+                    $gt: ISODate('2021-11-01T00:00:00.0Z'),
+                    $lt: ISODate('2021-12-01T00:00:00.0Z')
+                }
+            }
+        },
+        $comment: 'Choose reviews with special create_at'
+    }
+});
+//на сегодняшний день
+db.company.find({
+    'reviews': { $elemMatch: { date: new Date().toISOString().slice(0, 10) } },
+    $comment: 'Choose reviews with special create_at'
+});
+db.company.aggregate({
+    $match: {
+        'reviews': { $elemMatch: { date: new Date().toISOString().slice(0, 10) } },
+        $comment: 'Choose reviews with special create_at'
+    }
+});
+// за последний месяц.
+db.company.find({
+    'reviews': {
+        $elemMatch: {
+            date: {
+                $gt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+                $lt: new Date()
+            }
+        }
+    },
+    $comment: 'Choose users with special create_at'
+});
+db.company.aggregate({
+    $match: {
+        'reviews': {
+            $elemMatch: {
+                date: {
+                    $gt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+                    $lt: new Date()
+                }
+            }
+        },
+        $comment: 'Choose users with special create_at'
+    }
+});
+//5) Выборка данных из нескольких коллекций.
+db.users.find().map(function (i) {
+    if (i._id != null)
+        return [
+            i,
+            db.company.find({ manager_id: i._id }, { comment: 'Choose from reviews and company collections' }).toArray()
+        ];
+});
+db.users.aggregate([{
+        $lookup: {
+            from: 'company',
+            localField: '_id',
+            foreignField: 'manager_id',
+            as: 'manager'
+        }
+    }], { $comment: 'Choose from users and company collections' });
+//6) Выборка из нескольких коллекций с фильтрацией.
+db.users.find({ role: 0 }).map(function (i) {
+    if (i._id != null)
+        return [
+            i,
+            db.company.find({ manager_id: i._id }, { comment: 'Choose from users and company collections' }).toArray()
+        ];
+});
+db.users.aggregate([
+    {
+        $match: {
+            role: 0,
+            $comment: 'Choose from users and company collections'
+        }
+    },
+    {
+        $lookup: {
+            from: 'company',
+            localField: '_id',
+            foreignField: 'manager_id',
+            as: 'manager'
+        }
+    }
+]);
+//7) Выборка ограниченного набора полей.
+db.users.find({}, {
+    login: 1,
+    role: 1,
+    password: 1,
+    _id: 0
+}, { comment: 'Select with some fields' });
+db.users.aggregate([{
+        $project: {
+            login: 1,
+            role: 1,
+            password: 1,
+            _id: 0
+        }
+    }], { $comment: 'Select with some fields' });
+//8) Сортировка по 1 полю, по нескольким полям.
+//Сортировка по 1 полю
+db.users.find().sort({ login: 1 }, { comment: 'Sort by field' });
+db.users.aggregate([{ $sort: { login: 1 } }], { $comment: 'Sort by field' });
+//по нескольким полям
+db.users.find().sort({
+    login: 1,
+    password: -1
+}, { comment: 'Sort by fields' });
+db.users.aggregate([{
+        $sort: {
+            login: 1,
+            password: -1
+        }
+    }], { $comment: 'Sort by fields' });
+//9) Вывод данных с n-ого по m-ый номер.
+db.users.find({}, { comment: 'Select from .. to ..' }).skip(2).limit(2);
+db.users.aggregate([
+    { $skip: 2 },
+    { $limit: 2 }
+], { $comment: 'Select from .. to ..' });
+//10) Написать запрос, который объединяет 1-9 пункты.
+db.users.find({
+    'user_info': {
+        $elemMatch: {
+            create_at: {
+                $gt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+                $lt: new Date()
+            },
+            email: { $regex: '^[^@s]+@[^@s]+.[^@s]+$' },
+            sex: {
+                $in: [
+                    'M',
+                    'W'
+                ]
+            }
+        }
+    }
+}, {
+    phone: 1,
+    create_at: 1,
+    email: 1
+}).map(function (i) {
+    if (i._id != null)
+        return [
+            i,
+            db.users.find({ _id: i._id }).sort({ phone: 1 }).skip(0).limit(2).toArray()
+        ];
+}, { comment: 'Union points 1-9' });
+db.users.aggregate([
+    {
+        $match: {
+            'user_info': {
+                $elemMatch: {
+                    email: { $regex: '^[^@s]+@[^@s]+.[^@s]+$' },
+                    create_at: {
+                        $gt: ISODate('2010-01-01T00:00:00.0Z'),
+                        $lt: ISODate('2021-11-30T00:00:00.0Z')
+                    },
+                    sex: {
+                        $in: [
+                            'M',
+                            'W'
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    { $skip: 0 },
+    { $limit: 2 },
+    { $sort: { phone: 1 } },
+    {
+        $project: {
+            phone: 1,
+            create_at: 1,
+            email: 1
+        }
+    },
+    {
+        $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'id'
+        }
+    }
+], { $comment: 'Union points 1-9' });
+
+
+//lab10
+
+function generateWord(length) {
+  var result = "";
+  var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+function generatePhone() {
+  var phone = "+375(29)";
+  for (let i = 0; i < 7; i++) {
+    phone += Math.floor(Math.random() * 10);
+    if (i == 2 || i == 4) {
+      phone += "-";
+    }
+  }
+  return phone;
+}
+
+function randomNum(min, max) {
+    var Range = max - min;
+    var Rand = Math.random();
+    return (min + Math.round(Rand * Range));
+}
+
+function randomDate(yer){
+    var month = randomNum(1,12);
+    month < 10 ? month = "0" + month : month;
+    var day = randomNum(1,31);
+    day < 10 ? day = "0" + day : day;
+
+    return "" + yer + "-" + month + "-" + day; 
+}
+
+function randomSex(){
+    var i = randomNum(0,1);
+    var str_return;
+    i = 0 ? str_return = "M" : str_return = "W";
+    return str_return;
+}
+
+function randomBul(){
+    var i = randomNum(0,1);
+    var str_return;
+    i = 0 ? str_return = "true" : str_return = "false";
+    return str_return;
+}
+
+function generateEmail() {
+  const maxWordSize = 10;
+  var email = "";
+
+  email += generateWord(Math.floor(Math.random() * maxWordSize) + 3);
+  email += "@";
+  email += generateWord(Math.floor(Math.random() * 4) + 2).toLocaleLowerCase();
+  email += ".";
+  email += generateWord(Math.floor(Math.random() * 3) + 1).toLocaleLowerCase();
+  return email;
+}
+
+
+function generateUser(objectId) {
+  return {
+            _id: objectId,
+            login: generateWord(12),
+            password: randomNum(100000,200000),
+            role: randomNum(0,1),
+            user_info: [{ avatar:generateWord(12),
+              phone:generatePhone() ,
+              create_at: ISODate(randomDate(2021)),
+              sex: randomSex(),
+              email: generateEmail()}],
+
+            cities:    [{ name: generateWord(10)}],
+
+            user_coupons: [{is_used: randomBul()}]
+        };
+    }
+
+
+
+
+
+function generateCompany(userId) {
+  return {
+    name: generateWord(9),
+    adress: generateWord(20),
+    phone: generatePhone(),
+    manager_id: userId,
+    description: generateWord(30),
+    reviews: [{ user_id: userId,
+                comment: generateWord(30),
+                rate: randomNum(0,10),
+                date: ISODate(randomDate(2021))}],
+    
+    coupons: [{ discount: randomNum(10,100),
+                name: generateWord(9),
+                amoun: randomNum(100,1000),
+                start_date: ISODate(randomDate(2021)),
+                end_date: ISODate(randomDate(2021)),
+                services: [{ name: generateWord(5)}],
+                description: generateWord(50)}]
+}
+  }
+  
+db.users.drop();
+db.company.drop();
+
+function fillDb() {
+  const size = 100000;
+  var userDocs = Array(size);
+  var companyDocs = Array(size);
+  for (let i = 0; i < size; i++) {
+    var userId = new ObjectId();
+    userDocs[i] = generateUser(userId);
+    companyDocs[i] = generateCompany(userId);
+  }
+
+  db.users.insertMany(userDocs);
+  db.company.insertMany(companyDocs);
+}
+
+fillDb();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+use("test");
+db.getProfilingStatus();
+db.setProfilingLevel(2);
+
+//db.users.getIndexes() - view all indexex
+//db.users.dropIndex("name_1")
+
+db.system.profile.find({}, { op: 1, command: 1, millis: 1, ts: 1 }).sort({ ts: -1 }).limit(1);
+
+// single
+db.users.createIndex({ login: 1 });
+db.users.createIndex({ password: -1 });
+db.company.createIndex({ name: 1 });
+
+db.users.dropIndex("login_1");
+db.users.dropIndex("password_-1");
+db.book_tables.dropIndex("user_id_1");
+
+// composite
+db.users.createIndex({ login: 1, password: -1 });
+db.users.dropIndex("login_1_password_-1");
+
+// hashed
+db.users.createIndex({ login: "hashed" });
+db.users.dropIndex("login_hashed");
